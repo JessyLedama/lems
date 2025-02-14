@@ -8,6 +8,7 @@ use App\Services\DigitalOceanDnsService;
 use Illuminate\Support\Facades\Hash;
 use DirectoryTree\ImapEngine\Mailbox;
 use App\Services\EmailAccountService;
+use Illuminate\Support\Facades\Mail;
 
 class EmailAccountController extends Controller
 {
@@ -62,6 +63,25 @@ class EmailAccountController extends Controller
         ]);
 
         return response()->json($mailbox->emails());
+    }
+
+    public function sendEmail(Request $request)
+    {
+        $request->validate([
+            'to'      => 'required|email',
+            'subject' => 'required|string',
+            'body'    => 'required|string',
+        ]);
+    
+        Mail::raw($request->body, function ($message) use ($request) {
+            $message->to($request->to)
+                    ->subject($request->subject);
+        });
+
+        session()->flash('success', 'Email sent.');
+    
+        // return response()->json(['message' => 'Email sent successfully']);
+        return redirect()->route('inbox');
     }
 
     public function dashboard()
